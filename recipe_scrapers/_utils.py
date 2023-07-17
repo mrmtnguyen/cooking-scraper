@@ -5,6 +5,7 @@ import math
 import re
 
 import isodate
+from quantulum3 import parser
 
 from ._exceptions import ElementNotFoundInHtml
 
@@ -147,6 +148,23 @@ def normalize_string(string):
         .replace("\t", " ")
         .strip(),
     )
+
+
+def normalize_ingredients(ingredients):
+    n_ingredients = []
+    for ingredient in ingredients:
+        p_ing = parser.parse(normalize_string(ingredient))
+        p_ing = p_ing[0] if len(p_ing) > 0 else None
+        n_ingredients.append(
+            {
+                "name": normalize_string(ingredient.replace(p_ing.surface, "", 1))
+                if p_ing
+                else ingredient,
+                "quantity": p_ing.value if p_ing else None,
+                "unit": p_ing.unit.name if p_ing else None,
+            }
+        )
+    return n_ingredients
 
 
 def url_path_to_dict(path):
