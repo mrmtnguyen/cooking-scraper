@@ -1,12 +1,13 @@
 from __future__ import annotations
-
 import contextlib
 from typing import Any, Optional
-
-from ._abstract import AbstractScraper
-from ._exceptions import NoSchemaFoundInWildMode, WebsiteNotImplementedError
+from ._abstract import AbstractScraper, HEADERS
+from ._exceptions import NoSchemaFoundInWildMode, WebsiteNotImplementedError, AutomatedClientsNotAllowed
 from ._factory import SchemaScraperFactory
 from ._utils import get_host_name
+import urllib.robotparser
+import requests
+from urllib.parse import urljoin
 from .abril import Abril
 from .abuelascounter import AbuelasCounter
 from .acouplecooks import ACoupleCooks
@@ -643,22 +644,40 @@ def scraper_exists_for(url_path: str) -> bool:
     return host_name in get_supported_urls()
 
 
+def check_scraper_allowed(url_path, host_name, **options: Any) -> bool:
+    """Checks the website's robots.txt file to see if scraping is allowed.
+    If scraping is allowed, returns true. Note that this does not check to see
+    when the last time robots.txt was checked, so this could lead to constant pings
+    on robots.txt"""
+    if not options.get("check_robots_txt", True):
+        return True
+    else:
+        url = urljoin(url_path, '/robots.txt')
+        resp = requests.get(url, headers=HEADERS)
+        rp = urllib.robotparser.RobotFileParser()
+        rp.parse(resp.text)
+        if rp.can_fetch('*', url_path):
+            return True
+        else:
+            raise AutomatedClientsNotAllowed(host_name)
+
+
 def scrape_me(url_path: str, **options: Any) -> AbstractScraper:
     host_name = get_host_name(url_path)
+    if check_scraper_allowed(url_path, host_name, **options):
+        try:
+            scraper = SCRAPERS[host_name]
+        except KeyError:
+            if not options.get("wild_mode", False):
+                raise WebsiteNotImplementedError(host_name)
+            else:
+                options.pop("wild_mode")
+                wild_scraper = SchemaScraperFactory.generate(url_path, **options)
+                if not wild_scraper.schema.data:
+                    raise NoSchemaFoundInWildMode(url_path)
+                return wild_scraper
 
-    try:
-        scraper = SCRAPERS[host_name]
-    except KeyError:
-        if not options.get("wild_mode", False):
-            raise WebsiteNotImplementedError(host_name)
-        else:
-            options.pop("wild_mode")
-            wild_scraper = SchemaScraperFactory.generate(url_path, **options)
-            if not wild_scraper.schema.data:
-                raise NoSchemaFoundInWildMode(url_path)
-            return wild_scraper
-
-    return scraper(url_path, **options)
+        return scraper(url_path, **options)
 
 
 def scrape_html(
