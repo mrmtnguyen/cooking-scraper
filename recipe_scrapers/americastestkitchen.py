@@ -2,7 +2,6 @@
 
 import functools
 import json
-import re
 
 from recipe_scrapers._grouping_utils import IngredientGroup
 
@@ -13,8 +12,8 @@ from ._utils import get_minutes, normalize_string
 class AmericasTestKitchen(AbstractScraper):
 
     @classmethod
-    def host(cls, domain="americastestkitchen.com"):
-        return domain
+    def host(cls):
+        return "americastestkitchen.com"
 
     def author(self):
         return self.schema.author()
@@ -50,27 +49,30 @@ class AmericasTestKitchen(AbstractScraper):
             )
         return ingredient_groups
 
-    def instructions(self):  # add headnote
+    def instructions(self):
         if headnote := self._get_additional_details.get("headnote"):
             # We could import HTMLTagStripperPlugin, but that would make it -- an optional plugin -- a dependency.
-            headnote = f"Note: {normalize_string(re.sub(r'<.*?>', '', headnote))}\n"
-        else:
-            headnote = ""
-        return headnote + self.schema.instructions()
-
-    def instructions_group(self):
-        if headnote := self._get_additional_details.get("headnote"):
-            # We could import HTMLTagStripperPlugin, but that would make it -- an optional plugin -- a dependency.
-            headnote = f"Note: {normalize_string(re.sub(r'<.*?>', '', headnote))}\n"
+            headnote = f"Note: {normalize_string(headnote)}"
         else:
             headnote = ""
         return "\n".join(
             [headnote]
             + [
-                self._get_additional_details.get("instruction")["fields"]["content"]
-                for instruction in self._get_additional_details.get("instruction")
+                normalize_string(instruction["fields"]["content"])
+                for instruction in self._get_additional_details.get("instructions")
             ]
-        )
+        ).lstrip("\n")
+
+    def instructions_group(self):
+        if headnote := self._get_additional_details.get("headnote"):
+            # We could import HTMLTagStripperPlugin, but that would make it -- an optional plugin -- a dependency.
+            headnote = f"Note: {normalize_string(headnote)}"
+        else:
+            headnote = ""
+        return [headnote] + [
+            normalize_string(instruction["fields"]["content"])
+            for instruction in self._get_additional_details.get("instructions")
+        ]
 
     def yields(self):
         return self.schema.yields()
