@@ -81,6 +81,7 @@ from .cooktalk import CookTalk
 from .copykat import CopyKat
 from .costco import Costco
 from .countryliving import CountryLiving
+from .creativecanning import CreativeCanning
 from .cucchiaio import Cucchiaio
 from .cuisineaz import CuisineAZ
 from .cybercook import Cybercook
@@ -396,6 +397,7 @@ SCRAPERS = {
     CopyKat.host(): CopyKat,
     Costco.host(): Costco,
     CountryLiving.host(): CountryLiving,
+    CreativeCanning.host(): CreativeCanning,
     Cucchiaio.host(): Cucchiaio,
     CuisineAZ.host(): CuisineAZ,
     Cybercook.host(): Cybercook,
@@ -572,7 +574,6 @@ SCRAPERS = {
     PlowingThroughLife.host(): PlowingThroughLife,
     PopSugar.host(): PopSugar,
     PracticalSelfReliance.host(): PracticalSelfReliance,
-    PracticalSelfReliance.host(domain="creativecanning.com"): PracticalSelfReliance,
     PressureLuckCooking.host(): PressureLuckCooking,
     PrimalEdgeHealth.host(): PrimalEdgeHealth,
     ProjectGezond.host(): ProjectGezond,
