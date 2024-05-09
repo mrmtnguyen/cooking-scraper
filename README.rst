@@ -37,13 +37,19 @@ then:
 
 .. code:: python
 
-    from recipe_scrapers import scrape_me
+    import requests
+    from recipe_scrapers import scrape_html
 
-    scraper = scrape_me('https://www.allrecipes.com/recipe/158968/spinach-and-feta-turkey-burgers/')
+    # give the url as a string, it can be url from any site listed below
+    url = "https://www.allrecipes.com/recipe/158968/spinach-and-feta-turkey-burgers/"
+    html = requests.get(url).content
+    scraper = scrape_html(html, org_url=url)
 
     # Q: What if the recipe site I want to extract information from is not listed below?
     # A: You can give it a try with the wild_mode option! If there is Schema/Recipe available it will work just fine.
-    scraper = scrape_me('https://www.feastingathome.com/tomato-risotto/', wild_mode=True)
+    url = 'https://www.feastingathome.com/tomato-risotto/'
+    html = requests.get(url).content
+    scraper = scrape_html(html, org_url=url, wild_mode=True)
 
     scraper.host()
     scraper.title()
@@ -63,27 +69,40 @@ then:
     scraper.keywords()  # not always available
     scraper.dietary_restrictions() # not always available
 
-You also have an option to scrape html-like content
-
-.. code:: python
-
-    import requests
-    from recipe_scrapers import scrape_html
-
-    url = "https://www.allrecipes.com/recipe/158968/spinach-and-feta-turkey-burgers/"
-    html = requests.get(url).content
-
-    scraper = scrape_html(html=html, org_url=url)
-
-    scraper.title()
-    scraper.total_time()
-    # etc...
-
 Notes:
 
 - ``scraper.links()`` returns a list of dictionaries containing all of the <a> tag attributes. The attribute names are the dictionary keys.
 
-Some Python HTTP clients that you can use to retrieve HTML include `requests <https://pypi.org/project/requests/>`_ and `httpx <https://pypi.org/project/httpx/>`_.  Please refer to their documentation to find out what options (timeout configuration, proxy support, etc) are available.
+Some Python HTTP clients that you can use to retrieve HTML include `requests`_ and `httpx`_.  Please refer to their documentation to find out what options (timeout configuration, proxy support, etc) are available.
+
+.. _requests: https://pypi.org/project/requests/
+
+.. _httpx: https://pypi.org/project/httpx/
+
+
+Migrating from v14:
+-------------------
+
+The parameters to the ``scrape_html`` function have been adjusted in v15 and are intended to make code that uses them more readable.  However, the changes should be considered ``breaking changes`` -- some applications may need to adjust their code to upgrade successfully.
+
+Here are some use-cases that we have prepared migration suggestions for:
+
+
+Scraping a recipe URL on-demand
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Note**: the example below depends on the `requests`_ package; use 'pip install requests' to ensure that it is installed.
+
+.. code:: python
+
+    ## Legacy v14
+    url = '<url of a recipe from the site>'
+    scraper = scrape_me(url)
+
+    ## Migrated v15
+    url = '<url of a recipe from the site>'
+    html = requests.get(url).content
+    scraper = scrape_html(html=html, org_url=url)
 
 
 Scrapers available for:
@@ -102,6 +121,7 @@ Scrapers available for:
 - `https://alltommat.se/ <https://alltommat.se/>`_
 - `https://altonbrown.com/ <https://altonbrown.com/>`_
 - `https://amazingribs.com/ <https://amazingribs.com/>`_
+- `https://americastestkitchen.com/ <https://www.americastestkitchen.com>`_ (*)
 - `https://ambitiouskitchen.com/ <https://ambitiouskitchen.com>`_
 - `https://archanaskitchen.com/ <https://archanaskitchen.com/>`_
 - `https://www.argiro.gr/ <https://www.argiro.gr/>`_
@@ -139,10 +159,12 @@ Scrapers available for:
 - `https://comidinhasdochef.com/ <https://comidinhasdochef.com/>`_
 - `https://cookeatshare.com/ <https://cookeatshare.com/>`_
 - `https://cookieandkate.com/ <https://cookieandkate.com/>`_
+- `https://cooksillustrated.com/ <https://www.cooksillustrated.com>`_ (*)
 - `https://cookingcircle.com/ <https://cookingcircle.com/>`_
 - `https://cookinglight.com/ <https://cookinglight.com/>`_
 - `https://cookpad.com/ <https://cookpad.com/>`_
 - `https://cookstr.com/ <https://cookstr.com>`_
+- `https://cookscountry.com/ <https://www.cookscountry.com>`_ (*)
 - `https://cook-talk.com/ <https://cook-talk.com/>`_
 - `https://www.coop.se/ <https://www.coop.se/>`_
 - `https://copykat.com/ <https://copykat.com>`_
@@ -181,7 +203,6 @@ Scrapers available for:
 - `https://food.com/ <https://www.food.com>`_
 - `https://food52.com/ <https://www.food52.com>`_
 - `https://foodandwine.com/ <https://www.foodandwine.com>`_
-- `https://foodnetwork.com/ <https://www.foodnetwork.com>`_
 - `https://foodrepublic.com/ <https://foodrepublic.com>`_
 - `https://www.forksoverknives.com/ <https://www.forksoverknives.com/>`_
 - `https://forktospoon.com/ <https://forktospoon.com/>`_
@@ -242,7 +263,6 @@ Scrapers available for:
 - `https://kochbar.de/ <https://kochbar.de>`_
 - `https://kochbucher.com/ <https://kochbucher.com/>`_
 - `http://koket.se/ <http://koket.se>`_
-- `https://www.kptncook.com/ <https://www.kptncook.com>`_
 - `https://kuchnia-domowa.pl/ <https://www.kuchnia-domowa.pl/>`_
 - `https://kuchynalidla.sk/ <https://www.kuchynalidla.sk/>`_
 - `https://www.kwestiasmaku.com/ <https://www.kwestiasmaku.com/>`_
@@ -258,15 +278,7 @@ Scrapers available for:
 - `https://lovingitvegan.com/ <https://lovingitvegan.com/>`_
 - `https://www.maangchi.com <https://www.maangchi.com>`_
 - `https://madensverden.dk/ <https://madensverden.dk/>`_
-- `https://www.madewithlau.com/ <https://www.madewithlau.com/>`_
 - `https://madsvin.com/ <https://madsvin.com/>`_
-- `https://marleyspoon.com.au/ <https://marleyspoon.com.au/>`_
-- `https://marleyspoon.com/ <https://marleyspoon.com/>`_
-- `https://marleyspoon.de/ <https://marleyspoon.de/>`_
-- `https://marleyspoon.at/ <https://marleyspoon.at/>`_
-- `https://marleyspoon.be/ <https://marleyspoon.be/>`_
-- `https://marleyspoon.nl/ <https://marleyspoon.nl/>`_
-- `https://marleyspoon.se/ <https://marleyspoon.se/>`_
 - `https://marmiton.org/ <https://marmiton.org/>`_
 - `https://www.marthastewart.com/ <https://www.marthastewart.com/>`_
 - `https://matprat.no/ <https://matprat.no/>`_
@@ -412,7 +424,6 @@ Scrapers available for:
 - `https://www.williams-sonoma.com/ <https://www.williams-sonoma.com/>`_
 - `https://www.womensweekly.com.au/ <https://www.womensweekly.com.au/>`_
 - `https://woop.co.nz/ <https://woop.co.nz/>`_
-- `https://woolworths.com.au/shop/recipes <https://www.woolworths.com.au/shop/recipes/>`_
 - `https://en.wikibooks.org/ <https://en.wikibooks.org>`_
 - `https://yemek.com/ <https://yemek.com>`_
 - `https://yummly.com/ <https://yummly.com>`_ (*)
@@ -420,7 +431,7 @@ Scrapers available for:
 - `https://zeit.de/ (wochenmarkt) <https://www.zeit.de/zeit-magazin/wochenmarkt/index>`_
 - `https://zenbelly.com/ <https://zenbelly.com>`_
 
-(*) offline saved files only
+(*) offline saved files only. Page requires login
 
 
 Contribute
@@ -481,8 +492,10 @@ FAQ
 
 .. code:: python
 
-    from recipe_scrapers import scrape_me
-    scraper = scrape_me('<url of a recipe from the site>', wild_mode=True)
+    from recipe_scrapers import scrape_html
+    url = '<url of a recipe from the site>'
+    html = requests.get(url).content
+    scraper = scrape_html(html, org_url=url, wild_mode=True)
     # if no error is raised - there's schema available:
     scraper.title()
     scraper.instructions()  # etc.
